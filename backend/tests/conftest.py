@@ -138,3 +138,114 @@ def test_queries():
         "general_knowledge": "What is machine learning?",
         "invalid_query": ""
     }
+
+@pytest.fixture
+def mock_rag_system_for_api():
+    """Mock RAG system specifically for API testing"""
+    mock_system = MagicMock()
+    
+    # Mock session manager
+    mock_session_manager = MagicMock()
+    mock_session_manager.create_session.return_value = "test_session_123"
+    mock_session_manager.clear_session.return_value = None
+    mock_system.session_manager = mock_session_manager
+    
+    # Mock query method with realistic responses
+    mock_system.query.return_value = (
+        "MCP (Model Context Protocol) is a protocol for connecting AI assistants to external data sources and tools.",
+        ["Source: MCP Course - Lesson 1: Introduction to MCP", "Source: MCP Course - Lesson 2: Protocol Basics"]
+    )
+    
+    # Mock analytics method
+    mock_system.get_course_analytics.return_value = {
+        "total_courses": 3,
+        "course_titles": ["MCP Course", "FastAPI Course", "Python Fundamentals"]
+    }
+    
+    # Mock vector store for lesson links
+    mock_vector_store = MagicMock()
+    mock_vector_store.get_lesson_link.return_value = "https://example.com/courses/mcp/lesson-1"
+    mock_system.vector_store = mock_vector_store
+    
+    return mock_system
+
+@pytest.fixture
+def api_test_data():
+    """Common test data for API endpoints"""
+    return {
+        "valid_query_request": {
+            "query": "What is MCP?",
+            "session_id": "test_session_123"
+        },
+        "query_without_session": {
+            "query": "Explain the Model Context Protocol"
+        },
+        "invalid_query_request": {},
+        "clear_session_request": {
+            "session_id": "test_session_123"
+        },
+        "invalid_clear_session_request": {},
+        "expected_course_stats": {
+            "total_courses": 3,
+            "course_titles": ["MCP Course", "FastAPI Course", "Python Fundamentals"]
+        },
+        "expected_query_response_fields": ["answer", "sources", "session_id"],
+        "expected_lesson_link": "https://example.com/courses/mcp/lesson-1"
+    }
+
+@pytest.fixture
+def mock_anthropic_client_with_tools():
+    """Enhanced mock Anthropic client that simulates tool calling behavior"""
+    mock_client = MagicMock()
+    
+    # Mock initial message that triggers tool use
+    mock_tool_use_response = MagicMock()
+    mock_tool_use_response.stop_reason = "tool_use"
+    
+    # Mock tool use block
+    mock_tool_block = MagicMock()
+    mock_tool_block.type = "tool_use"
+    mock_tool_block.name = "search_course_content"
+    mock_tool_block.id = "tool_abc123"
+    mock_tool_block.input = {"query": "Model Context Protocol", "course": None, "lesson": None}
+    
+    mock_tool_use_response.content = [mock_tool_block]
+    
+    # Mock final response after tool execution
+    mock_final_response = MagicMock()
+    mock_final_response.stop_reason = "stop"
+    mock_final_text_block = MagicMock()
+    mock_final_text_block.type = "text"
+    mock_final_text_block.text = (
+        "Based on the search results, MCP (Model Context Protocol) is a protocol "
+        "that enables AI assistants to connect to external data sources and tools securely."
+    )
+    mock_final_response.content = [mock_final_text_block]
+    
+    # Configure the mock to return tool use first, then final response
+    mock_client.messages.create.side_effect = [mock_tool_use_response, mock_final_response]
+    
+    return mock_client
+
+@pytest.fixture
+def mock_session_manager():
+    """Mock session manager for testing"""
+    mock_manager = MagicMock()
+    
+    # Mock session operations
+    mock_manager.create_session.return_value = "new_session_456"
+    mock_manager.get_session_messages.return_value = []
+    mock_manager.add_message.return_value = None
+    mock_manager.clear_session.return_value = None
+    
+    # Mock session data
+    mock_manager.sessions = {
+        "existing_session": {
+            "messages": [
+                {"role": "user", "content": "Hello"},
+                {"role": "assistant", "content": "Hi there!"}
+            ]
+        }
+    }
+    
+    return mock_manager
