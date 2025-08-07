@@ -14,5 +14,18 @@
       "Bash(python3 -m pytest tests/test_ai_generator.py -v)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say 'All done'"
+          }
+        ]
+      }
+    ]
   }
 }
