@@ -51,6 +51,15 @@ class CourseStats(BaseModel):
     total_courses: int
     course_titles: List[str]
 
+class ClearSessionRequest(BaseModel):
+    """Request model for clearing a session"""
+    session_id: str
+
+class ClearSessionResponse(BaseModel):
+    """Response model for clearing a session"""
+    success: bool
+    message: str
+
 # API Endpoints
 
 @app.post("/api/query", response_model=QueryResponse)
@@ -91,6 +100,18 @@ async def get_lesson_link(course: str, lesson: int):
     try:
         lesson_link = rag_system.vector_store.get_lesson_link(course, lesson)
         return {"link": lesson_link}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/clear-session", response_model=ClearSessionResponse)
+async def clear_session(request: ClearSessionRequest):
+    """Clear all messages from a specific session"""
+    try:
+        rag_system.session_manager.clear_session(request.session_id)
+        return ClearSessionResponse(
+            success=True,
+            message=f"Session {request.session_id} cleared successfully"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
