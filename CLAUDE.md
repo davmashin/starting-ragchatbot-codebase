@@ -26,6 +26,47 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 - Use `uv` to run python files and to manage all dependencies, never use pip directly or just python
 
+## Code Quality Tools
+
+**Install dev dependencies:**
+```bash
+uv sync --group dev
+```
+
+**Format code (fixes issues automatically):**
+```bash
+# Unix/Linux/Mac
+./scripts/format.sh
+
+# Windows PowerShell
+.\scripts\format.ps1
+
+# Manual commands
+uv run isort backend/       # Sort imports
+uv run black backend/       # Format code
+```
+
+**Run quality checks:**
+```bash
+# Unix/Linux/Mac
+./scripts/quality.sh
+
+# Windows PowerShell
+.\scripts\quality.ps1
+
+# Manual commands
+uv run black backend/ --check --diff                                    # Check formatting
+uv run isort backend/ --diff --check-only                              # Check import order
+uv run flake8 backend/ --max-line-length=88 --extend-ignore=E203,W503  # Lint code
+uv run mypy backend/                                                    # Type checking
+uv run pytest backend/tests/ -v                                        # Run tests
+```
+
+**Pre-commit workflow:**
+1. Run `./scripts/format.sh` to auto-fix formatting
+2. Run `./scripts/quality.sh` to verify all checks pass
+3. Commit your changes
+
 ## Architecture Overview
 
 This is a **Retrieval-Augmented Generation (RAG) system** for course materials with AI-powered semantic search. The system uses a **tool-based approach** where Claude decides autonomously when to search vs. provide direct answers.
