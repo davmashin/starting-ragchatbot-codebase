@@ -84,3 +84,21 @@ All settings in `backend/config.py`:
 - **Real-time UI**: Loading states, progressive response display
 - **Source attribution**: Collapsible sources from ChromaDB metadata
 - **Session continuity**: Automatic session creation and management
+
+### Vector Database Details
+
+- **Two collections in the vector database**:
+  - `course_catalog`: 
+    - Stores course titles for name resolution
+    - Metadata for each course includes:
+      - title
+      - instructor
+      - course_link
+      - lesson_count
+      - lessons_json (list of lessons with lesson_number, lesson_title, lesson_link)
+  - `course_content`:
+    - Stores text chunks for semantic search
+    - Metadata for each chunk includes:
+      - course_title
+      - lesson_number
+      - chunk_index

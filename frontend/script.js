@@ -125,9 +125,12 @@ function addMessage(content, type, sources = null, isWelcome = false) {
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content" id="sources-${messageId}">Loading sources...</div>
             </details>
         `;
+        
+        // Process sources asynchronously to add links
+        setTimeout(() => processSourceLinks(sources, messageId), 0);
     }
     
     messageDiv.innerHTML = html;
@@ -142,6 +145,47 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Process sources to add clickable links
+async function processSourceLinks(sources, messageId) {
+    const sourcesContainer = document.getElementById(`sources-${messageId}`);
+    if (!sourcesContainer) return;
+
+    try {
+        const processedSources = await Promise.all(sources.map(async (source) => {
+            // Parse source string to extract course and lesson info
+            // Expected format: "Course Title - Lesson N" or just "Course Title"
+            const lessonMatch = source.match(/^(.+?)\s+-\s+Lesson\s+(\d+)$/i);
+            
+            if (lessonMatch) {
+                const courseTitle = lessonMatch[1].trim();
+                const lessonNumber = parseInt(lessonMatch[2]);
+                
+                try {
+                    // Fetch lesson link from API
+                    const response = await fetch(`${API_URL}/lesson-link?course=${encodeURIComponent(courseTitle)}&lesson=${lessonNumber}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.link) {
+                            return `<a href="${escapeHtml(data.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source)}</a>`;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Failed to fetch lesson link for', source, error);
+                }
+            }
+            
+            // Return plain text if no link found or parsing failed
+            return escapeHtml(source);
+        }));
+        
+        sourcesContainer.innerHTML = processedSources.join('');
+    } catch (error) {
+        console.error('Error processing source links:', error);
+        // Fallback to plain text sources
+        sourcesContainer.innerHTML = sources.map(escapeHtml).join(', ');
+    }
 }
 
 // Removed removeMessage function - no longer needed since we handle loading differently

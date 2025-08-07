@@ -85,6 +85,15 @@ async def get_course_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/lesson-link")
+async def get_lesson_link(course: str, lesson: int):
+    """Get lesson link for a specific course and lesson number"""
+    try:
+        lesson_link = rag_system.vector_store.get_lesson_link(course, lesson)
+        return {"link": lesson_link}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("startup")
 async def startup_event():
     """Load initial documents on startup"""
