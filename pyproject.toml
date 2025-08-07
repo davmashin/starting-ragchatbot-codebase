@@ -21,6 +21,8 @@ dev = [
     "flake8>=7.0.0",
     "isort>=5.13.0",
     "mypy>=1.8.0",
+    "httpx>=0.24.0",
+    "pytest-asyncio>=0.21.0",
 ]
 
 [tool.black]
@@ -63,3 +65,21 @@ exclude = [
     ".venv/",
     "__pycache__/",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "api: API endpoint tests",
+]
+asyncio_mode = "auto"
